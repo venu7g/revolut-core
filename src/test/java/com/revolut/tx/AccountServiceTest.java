@@ -3,6 +3,7 @@ package com.revolut.tx;
 import com.revolut.tx.exceptions.AlreadyExistException;
 import com.revolut.tx.exceptions.InsufficientBalanceException;
 import com.revolut.tx.exceptions.NoSuchAccountException;
+import com.revolut.tx.model.Account;
 import com.revolut.tx.services.IAccountService;
 import com.revolut.tx.services.factory.ServiceFactory;
 import org.junit.AfterClass;
@@ -26,12 +27,12 @@ public class AccountServiceTest {
 
     @Test
     public void testCreateAndGetAccount() throws NoSuchAccountException, AlreadyExistException {
-      /*  String accountId = "9876";
+       String accountId = "9876";
         Long initialBalance = 1000L;
         accountService.createAccount(accountId,initialBalance);
         Account account = new Account(accountId,initialBalance);
         Account account1 = accountService.getAccountDetails(accountId);
-        Assert.assertEquals(account.getAccountId(),account.getAccountId());*/
+        Assert.assertEquals(account.getAccountId(),account1.getAccountId());
     }
 
 
@@ -72,7 +73,7 @@ public class AccountServiceTest {
 
     @Test
     public void testAddAccountBalance() throws NoSuchAccountException, AlreadyExistException {
-       /* String accountId = "90101";
+        String accountId = "90101";
         Long balance = 1000l;
         Long depositedAmount = 200l;
 
@@ -80,7 +81,7 @@ public class AccountServiceTest {
         accountService.addAccountBalance(accountId,depositedAmount);
         Long domain = balance + depositedAmount;
         Long dbresult = accountService.getAccountBalance(accountId);
-        Assert.assertEquals(domain,dbresult);*/
+        Assert.assertEquals(domain,dbresult);
     }
 
     @Test

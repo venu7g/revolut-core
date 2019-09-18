@@ -6,6 +6,7 @@ import com.revolut.tx.exceptions.InsufficientBalanceException;
 import com.revolut.tx.exceptions.NoSuchAccountException;
 import com.revolut.tx.model.Account;
 import com.revolut.tx.model.TransactionDetails;
+import com.revolut.tx.services.factory.ServiceFactory;
 import com.revolut.tx.util.RevolutConstants;
 import org.glassfish.hk2.utilities.reflection.Logger;
 
@@ -13,12 +14,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class AccountServiceImpl implements IAccountService {
 	Logger LOG = Logger.getLogger();
 	private H2dbDataSourceProvider datasource = H2dbDataSourceProvider.getInstance();
+
+	private ExecutorService executor = ServiceFactory.getInstance().executorService();
 
 	@Override
 	public Long getAccountBalance(String accountId) throws NoSuchAccountException {
@@ -28,7 +30,7 @@ public class AccountServiceImpl implements IAccountService {
 	}
 	
 	public Long getAccount(String accountId) {
-		ExecutorService executor = Executors.newFixedThreadPool(2);
+
 		Future<Long> future = executor.submit(() -> {
 			return datasource.execute(connection -> {
 				try (PreparedStatement statement = connection
@@ -46,13 +48,11 @@ public class AccountServiceImpl implements IAccountService {
 			});
 		});
 		try {
-			return future.get()!=null ? future.get():null;
+			return future.get();
 		} catch (InterruptedException | ExecutionException e) {
 			e.printStackTrace();
 		}
-		finally {
-			executor.shutdown();
-		}
+
 		return null;
 	}
 
@@ -77,7 +77,6 @@ public class AccountServiceImpl implements IAccountService {
 	}
 
 	private int updateAccount(String accountId, Long remainingBalance) {
-		ExecutorService executor = Executors.newFixedThreadPool(2);
 		int result = 0;
 		try {
 			Future<Integer> future = executor.submit(() -> {
@@ -96,8 +95,6 @@ public class AccountServiceImpl implements IAccountService {
 			result = future.get().intValue();
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-			executor.shutdown();
 		}
 		return result;
 	}
@@ -125,7 +122,7 @@ public class AccountServiceImpl implements IAccountService {
 
 	@Override
 	public void createAccount(String accountId, Long initialAmount) throws AlreadyExistException {
-		ExecutorService executor = Executors.newFixedThreadPool(2);
+		//Future<Integer> future =null;
 		Future<Integer> future = executor.submit(() -> {
 			return datasource.execute(connection -> {
 				try (PreparedStatement statement = connection
@@ -136,7 +133,12 @@ public class AccountServiceImpl implements IAccountService {
 				}
 			});
 		});
-		executor.shutdown();
+		try {
+			future.get();
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	@Override

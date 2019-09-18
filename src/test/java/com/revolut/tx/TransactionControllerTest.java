@@ -18,6 +18,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class TransactionControllerTest {
 
@@ -36,22 +37,15 @@ public class TransactionControllerTest {
     }
     
     
-    public void testCreateAccount(String accId,Long amt) throws IOException, AlreadyExistException {
+    public void testCreateAccount(String accId,Long amt) throws IOException, AlreadyExistException, ExecutionException, InterruptedException {
     	
     	accountService.createAccount(accId, amt);
-		/*
-		 * HttpUriRequest request = new
-		 * HttpPost(RevolutConstants.ACCOUNT_OPERATIONS_PATH +
-		 * "create?accountId="+accId+"&amount="+amt); HttpResponse response =
-		 * HttpClientBuilder.create().build().execute(request);
-		 * Assert.assertEquals(HttpStatus.SC_OK,response.getStatusLine().getStatusCode()
-		 * );
-		 */
+
     }
 
 
     @Test
-    public void testTransaction() throws IOException, AlreadyExistException, NoSuchAccountException {
+    public void testTransaction() throws IOException, AlreadyExistException, NoSuchAccountException, ExecutionException, InterruptedException {
         String accountId1 = "1911";
         Long initialAmount1 = 1000L;
         String accountId2 = "2811";
@@ -70,7 +64,7 @@ public class TransactionControllerTest {
     }
 
     @Test
-    public void testTransaction_InsufficientBalance() throws  IOException, AlreadyExistException {
+    public void testTransaction_InsufficientBalance() throws IOException, AlreadyExistException, ExecutionException, InterruptedException {
         String accountId1 = "21009";
         Long initialAmount1 = 1000L;
         String accountId2 = "22009";
@@ -92,7 +86,7 @@ public class TransactionControllerTest {
     }
 
     @Test
-    public void testTransaction_InvalidTransferAmount() throws AlreadyExistException, IOException {
+    public void testTransaction_InvalidTransferAmount() throws AlreadyExistException, IOException, ExecutionException, InterruptedException {
         String accountId1 = "2399";
         Long initialAmount1 = 1000L;
         String accountId2 = "2477";
@@ -113,7 +107,7 @@ public class TransactionControllerTest {
     }
 
     @Test
-    public void testTransaction_NoSuchAccount() throws AlreadyExistException, IOException {
+    public void testTransaction_NoSuchAccount() throws AlreadyExistException, IOException, ExecutionException, InterruptedException {
         String accountId1 = "2598";
         Long initialAmount1 = 1000L;
         String accountId2 = "2698";
