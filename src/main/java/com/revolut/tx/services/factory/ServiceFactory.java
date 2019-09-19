@@ -33,6 +33,7 @@ public class ServiceFactory {
 
     public ExecutorService executorService() {
         if (Objects.isNull(executor)) {
+            // int cpuCores = Runtime.getRuntime().availableProcessors();
             executor = Executors.newFixedThreadPool(4);
             addShutdownHook();
         }

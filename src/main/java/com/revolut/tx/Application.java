@@ -13,6 +13,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 public class Application {
     public static Server server;
 
+
     public static void main(String[] args) throws Exception {
         initServer();
         try {

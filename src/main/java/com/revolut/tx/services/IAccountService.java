@@ -12,7 +12,7 @@ public interface IAccountService {
     Long withDrawAmount(final String accountId,final Long balance) throws InsufficientBalanceException,NoSuchAccountException;
     void transferAccountBalance(final TransactionDetails transactionDetails) throws NoSuchAccountException, InsufficientBalanceException ;
 
-    void createAccount(String accountId, Long initialAmount) throws AlreadyExistException;
+    int createAccount(String accountId, Long initialAmount) throws AlreadyExistException;
 
     Account getAccountDetails(String accountId) throws NoSuchAccountException;
 }
