@@ -6,6 +6,7 @@ import com.revolut.tx.exceptions.InsufficientBalanceException;
 import com.revolut.tx.exceptions.NoSuchAccountException;
 import com.revolut.tx.model.Account;
 import com.revolut.tx.model.TransactionDetails;
+import com.revolut.tx.services.factory.BaseDao;
 import com.revolut.tx.services.factory.ServiceFactory;
 import com.revolut.tx.util.RevolutConstants;
 import org.glassfish.hk2.utilities.reflection.Logger;
@@ -22,7 +23,6 @@ import java.util.function.Supplier;
 
 public class AccountServiceImpl implements IAccountService {
     Logger LOG = Logger.getLogger();
-    private H2dbDataSourceProvider datasource = H2dbDataSourceProvider.getInstance();
 
     private ExecutorService executor = ServiceFactory.getInstance().executorService();
 
@@ -31,7 +31,6 @@ public class AccountServiceImpl implements IAccountService {
     @Override
     public Long getAccountBalance(String accountId) throws NoSuchAccountException {
         Long result = getAccount(accountId);
-
         return result != null ? result : 0L;
     }
 
@@ -43,7 +42,6 @@ public class AccountServiceImpl implements IAccountService {
                 } finally {
                     lock.unlock();
                 }
-
             } else {
                 throw new RuntimeException("Unable to get lock Timed out");
             }
@@ -52,34 +50,30 @@ public class AccountServiceImpl implements IAccountService {
         }
     }
 
-    public Long getAccount(String accountId) {
 
-        return exclusiveLock(() -> {
-            Future<Long> future = executor.submit(() -> {
-                return datasource.execute(connection -> {
+    public Long getAccount(String accountId) {
+        Future<Long> future = executor.submit(() -> {
+            return exclusiveLock(() -> {
+                return BaseDao.execute(connection -> {
+                    Long response = null;
                     try (PreparedStatement statement = connection
                             .prepareStatement("SELECT balance " + "FROM account " + "WHERE accountId = ?")) {
                         statement.setString(1, accountId);
                         ResultSet resultSet = statement.executeQuery();
-                        if (resultSet == null) {
-                            return null;
-                        }
                         if (resultSet.next()) {
-                            return resultSet.getLong(1);
+                            response = resultSet.getLong(1);
                         }
                     }
-                    return null;
+                    return response;
                 });
             });
-            try {
-                return future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-            }
-
-            return null;
-
         });
+        try {
+            return future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -103,28 +97,30 @@ public class AccountServiceImpl implements IAccountService {
     }
 
     private int updateAccount(String accountId, Long remainingBalance) {
-        return exclusiveLock(() -> {
-            int result = 0;
-            try {
-                Future<Integer> future = executor.submit(() -> {
-                    return datasource.execute(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement(
-                                "UPDATE account " + "SET balance = balance + ? " + "WHERE accountId = ?")) {
-                            statement.setDouble(1, remainingBalance);
-                            statement.setString(2, accountId);
 
-                            return statement.executeUpdate();
-                        }
-                    });
+        Future<Integer> future = executor.submit(() -> {
+            return exclusiveLock(() -> {
+                return BaseDao.execute(connection -> {
+                    int response;
+                    try (PreparedStatement statement = connection.prepareStatement(
+                            "UPDATE account " + "SET balance = balance + ? " + "WHERE accountId = ?")) {
+                        statement.setDouble(1, remainingBalance);
+                        statement.setString(2, accountId);
+
+                        response = statement.executeUpdate();
+                    }
+                    return response;
                 });
-                if (future.get() == null)
-                    throw new NoSuchAccountException(RevolutConstants.NO_SUCH_ACCOUNT + accountId);
-                result = future.get().intValue();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return result;
+            });
         });
+        try {
+            if (future.get() == null)
+                throw new NoSuchAccountException(RevolutConstants.NO_SUCH_ACCOUNT + accountId);
+            return future.get().intValue();
+        } catch (ExecutionException | InterruptedException | NoSuchAccountException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     @Override
@@ -150,9 +146,9 @@ public class AccountServiceImpl implements IAccountService {
 
     @Override
     public int createAccount(String accountId, Long initialAmount) throws AlreadyExistException {
-        return exclusiveLock(() -> {
-            Future<Integer> future = executor.submit(() -> {
-                return datasource.execute(connection -> {
+        Future<Integer> future = executor.submit(() -> {
+            return exclusiveLock(() -> {
+                return BaseDao.execute(connection -> {
                     try (PreparedStatement statement = connection
                             .prepareStatement("insert into account ( accountId, balance) " + "VALUES (?,?);");) {
                         statement.setString(1, accountId);
@@ -161,16 +157,13 @@ public class AccountServiceImpl implements IAccountService {
                     }
                 });
             });
-            try {
-                return future.get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-            return 0;
         });
-
+        try {
+            return future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     @Override

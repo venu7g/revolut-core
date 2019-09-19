@@ -44,7 +44,7 @@ public class AccountServiceTest {
 
     @Test
     public void testGetAccountDetailsBalance() throws NoSuchAccountException, AlreadyExistException {
-        String accountId = "9876";
+        String accountId = "98767";
         Long initialBalance = 1000L;
         accountService.createAccount(accountId,initialBalance);
         Assert.assertEquals(initialBalance,accountService.getAccountBalance(accountId));
