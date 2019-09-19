@@ -40,20 +40,4 @@ public  class H2dbDataSourceProvider  {
     public  Connection getConnection() throws SQLException {
         return ds.getConnection();
     }
-
-
-    public   <T> T execute(ConnectionCallable<T> callback) throws SQLException {
-	    AtomicReference<T> result = new AtomicReference<>();
-	    try (Connection conn = getConnection()) {
-	        result.set(callback.execute(conn));
-	        return result.get() ;
-	    } catch (SQLException e) {
-	        throw e;
-	    } catch (Throwable t) {
-	        throw t;
-	    }
-	}
-
-
-
 }
